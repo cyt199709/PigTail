@@ -43,6 +43,14 @@ void BasicWindow::loadStyleSheet(const QString& sheetName)
 								{border-top:1px solid rgba(0,153,204,100);\
 								background-color:rgba(0,153,204,50);\
 								border-bottom-left-radius:4px;\
+								border-bottom-right-radius:4px;}\
+								QWidget[leftSkin=true]\
+								{background-color:rgb(0,153,204);\
+								border-top-left-radius:4px;}\
+								QWidget[rightSkin=true]\
+								{border-top:1px solid rgba(0,153,204,100);\
+								background-color:rgba(0,153,204,50);\
+								border-bottom-left-radius:4px;\
 								border-bottom-right-radius:4px;}")
 			.arg(r).arg(g).arg(b);
 		setStyleSheet(qsstyleSheet);

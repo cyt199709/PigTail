@@ -85,9 +85,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CCMainWindow.cpp" />
     <ClCompile Include="TitleBar.cpp" />
     <ClCompile Include="UserLogin.cpp" />
     <QtRcc Include="PigTail.qrc" />
+    <QtUic Include="CCMainWindow.ui" />
     <QtUic Include="PigTail.ui" />
     <QtMoc Include="PigTail.h" />
     <ClCompile Include="BasicWindow.cpp" />
@@ -100,6 +102,7 @@
     <QtMoc Include="UserLogin.h" />
     <QtMoc Include="TitleBar.h" />
     <QtMoc Include="BasicWindow.h" />
+    <QtMoc Include="CCMainWindow.h" />
     <ClInclude Include="CommonUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

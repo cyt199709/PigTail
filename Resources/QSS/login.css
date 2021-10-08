@@ -32,6 +32,15 @@ QPushButton#cancelBtn:hover, QPushButton#cancelBtn:pressed{
 	background:rgb(33, 200, 253);
 }
 
+QPushButton#registerBtn{
+	font-size:14px;
+	background:rgb(7, 189, 253);
+}
+
+QPushButton#registerBtn:hover, QPushButton#registerBtn:pressed{
+	background:rgb(33, 200, 253);
+}
+
 QLineEdit#accountLineEdit, QLineEdit#passwordLineEdit{
 	background: #FFFFFF;
 	border: 1px solid #DDDDDD;

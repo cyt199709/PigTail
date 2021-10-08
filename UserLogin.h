@@ -3,6 +3,8 @@
 #include "BasicWindow.h"
 #include "ui_UserLogin.h"
 
+class QNetworkReply;
+
 class UserLogin : public BasicWindow
 {
 	Q_OBJECT
@@ -13,6 +15,7 @@ public:
 
 private slots:
 	void onLoginBtnClicked();
+	void finishedSlot(QNetworkReply* reply);
 
 private:
 	void initControl();
