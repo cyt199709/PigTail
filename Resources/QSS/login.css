@@ -1,0 +1,49 @@
+* {
+    font-family: Microsoft YaHei;
+}
+
+QWidget#UserLogin
+{
+    background-color:#ffffff;
+    border: 1px solid #cccccc;
+    border-radius:4px;
+}
+
+QLabel#TitleContent{
+	font-size:20px;
+	color:#000000
+}
+
+QPushButton#loginBtn{
+	font-size:14px;
+	background:rgb(7, 189, 253);
+}
+
+QPushButton#loginBtn:hover, QPushButton#loginBtn:pressed{
+	background:rgb(33, 200, 253);
+}
+
+QPushButton#cancelBtn{
+	font-size:14px;
+	background:rgb(7, 189, 253);
+}
+
+QPushButton#cancelBtn:hover, QPushButton#cancelBtn:pressed{
+	background:rgb(33, 200, 253);
+}
+
+QLineEdit#accountLineEdit, QLineEdit#passwordLineEdit{
+	background: #FFFFFF;
+	border: 1px solid #DDDDDD;
+	border-radius: 2px;
+	font-size: 14px;
+	color: #666666;
+}
+
+QLineEdit#accountLineEdit:hover, QLineEdit#passwordLineEdit:hover{
+	background: #FFFFFF;
+	border: 1px solid rgb(0, 161, 219);
+	border-radius: 2px;
+	font-size: 14px;
+	color: #666666;
+}
