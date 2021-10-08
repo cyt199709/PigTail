@@ -1,0 +1,25 @@
+<UI version="4.0" >
+ <class>PigTailClass</class>
+ <widget class="QWidget" name="PigTailClass" >
+  <property name="objectName" >
+   <string notr="true">PigTailClass</string>
+  </property>
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>400</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>PigTail</string>
+  </property>$centralwidget$
+ </widget>
+ <layoutDefault spacing="6" margin="11" />
+ <pixmapfunction></pixmapfunction>
+ <resources>
+   <include location="PigTail.qrc"/>
+ </resources>
+ <connections/>
+</UI>
