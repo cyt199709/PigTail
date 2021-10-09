@@ -85,11 +85,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Card.cpp" />
     <ClCompile Include="CCMainWindow.cpp" />
+    <ClCompile Include="GameWindow.cpp" />
     <ClCompile Include="TitleBar.cpp" />
     <ClCompile Include="UserLogin.cpp" />
     <QtRcc Include="PigTail.qrc" />
     <QtUic Include="CCMainWindow.ui" />
+    <QtUic Include="GameWindow.ui" />
     <QtUic Include="PigTail.ui" />
     <QtMoc Include="PigTail.h" />
     <ClCompile Include="BasicWindow.cpp" />
@@ -99,10 +102,12 @@
     <QtUic Include="UserLogin.ui" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="GameWindow.h" />
     <QtMoc Include="UserLogin.h" />
     <QtMoc Include="TitleBar.h" />
     <QtMoc Include="BasicWindow.h" />
     <QtMoc Include="CCMainWindow.h" />
+    <QtMoc Include="Card.h" />
     <ClInclude Include="CommonUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

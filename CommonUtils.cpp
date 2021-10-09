@@ -41,12 +41,3 @@ void CommonUtils::loadStyleSheet(QWidget* widget, const QString& sheetName)
 	}
 	file.close();
 }
-
-void CommonUtils::setDefaultSkinColor(const QColor& color)
-{
-}
-
-QColor CommonUtils::getDefaultSkinColor()
-{
-	return QColor();
-}

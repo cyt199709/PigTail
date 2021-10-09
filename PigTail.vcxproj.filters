@@ -55,6 +55,12 @@
     <ClCompile Include="CCMainWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GameWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Card.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonUtils.h">
@@ -74,12 +80,21 @@
     <QtMoc Include="CCMainWindow.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="GameWindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="Card.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="UserLogin.ui">
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="CCMainWindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="GameWindow.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
