@@ -19,4 +19,5 @@ public:
 
 public:
 	static void loadStyleSheet(QWidget* widget, const QString& sheetName);
+
 };

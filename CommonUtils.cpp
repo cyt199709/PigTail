@@ -1,6 +1,7 @@
 #include <QFile>
 #include <QWidget>
 #include <QProxyStyle>
+#include <QUrl>
 #include "CommonUtils.h"
 
 CustomProxyStyle::CustomProxyStyle(QObject *parent)
@@ -26,7 +27,7 @@ void CustomProxyStyle::drawPrimitive(PrimitiveElement element, const QStyleOptio
 }
 
 CommonUtils::CommonUtils()
-{
+{	
 }
 
 void CommonUtils::loadStyleSheet(QWidget* widget, const QString& sheetName)
@@ -41,3 +42,6 @@ void CommonUtils::loadStyleSheet(QWidget* widget, const QString& sheetName)
 	}
 	file.close();
 }
+
+
+

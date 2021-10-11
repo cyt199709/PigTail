@@ -1,0 +1,1 @@
+{"data":{"detail":{"id":110,"name":"\u9648\u827a\u5929","student_id":"032092119"},"token":"eyJhbGciOiJIUzUxMiIsImlhdCI6MTYzMzk0MjQ1OCwiZXhwIjoxNjM0ODA2NDU4fQ.eyJpZCI6MTEwfQ.TJNMwS96Hnp93x_Cv1b4u7J0UVskjXWleX3h_7LHP7FSGkyuPN8CpkoGkzSuah-pHrI64edP6RR85_3TACJ2nw"},"message":"Success","status":200}

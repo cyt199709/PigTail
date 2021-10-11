@@ -8,6 +8,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QMessageBox>
+#include <curl/curl.h>
 
 //#include "CCMainWindow.h"
 
@@ -15,6 +16,7 @@
 // 032092119 
 
 QString gToken;
+QString gId;
 
 UserLogin::UserLogin(QWidget* parent)
 	: BasicWindow(parent)
@@ -31,40 +33,6 @@ UserLogin::~UserLogin()
 {
 }
 
-void UserLogin::finishedSlot(QNetworkReply* reply)
-{
-
-	if (reply->error() == QNetworkReply::NoError)
-	{
-		QString value = QString::fromLocal8Bit(reply->readAll());
-		QJsonParseError err;
-		QJsonDocument document = QJsonDocument::fromJson(value.toUtf8(), &err);
-		if (!(err.error == QJsonParseError::NoError))
-		{
-			QMessageBox::warning(nullptr, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("Json文件解析失败!"));
-			return;
-		}
-		
-		QJsonObject obj = document.object();
-		QJsonValue jsonValue = obj.value(QLatin1Literal("data"));
-		QJsonObject child = jsonValue.toObject();
-		gToken = child["token"].toString();
-
-		close();
-		CCMainWindow* mainwindow = new CCMainWindow;
-		mainwindow->show();
-
-	}
-	else
-	{
-		qDebug() << "finishedSlot errors here";
-		qDebug("found error .... code: %d\n", (int)reply->error());
-		qDebug(qPrintable(reply->errorString()));
-		QMessageBox::warning(nullptr, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("请求服务器数据失败!"));
-	}
-	reply->deleteLater();
-}
-
 void UserLogin::initControl()
 {
 	connect(ui.loginBtn, &QPushButton::clicked, this, &UserLogin::onLoginBtnClicked);
@@ -73,16 +41,56 @@ void UserLogin::initControl()
 
 void UserLogin::onLoginBtnClicked()
 {
-	QNetworkAccessManager* accessManager = new QNetworkAccessManager(this);
-	connect(accessManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(finishedSlot(QNetworkReply*)));
+    CURL* curl;
+    CURLcode res;
+    //QByteArray url = "http://172.17.173.97:8080/api/user/login?student_id=" + ui.accountLineEdit->text().toUtf8() + "&password=" + ui.passwordLineEdit->text().toUtf8();
+    QByteArray url = "http://172.17.173.97:8080/api/user/login?student_id=032092119&password=cytcyt918"; //+ ui.accountLineEdit->text().toUtf8() + "&password=" + ui.passwordLineEdit->text().toUtf8();
+    curl = curl_easy_init();
+    FILE* fp;
+    if ((fp = fopen("onlineReturn.txt", "w+")) == NULL)
+        return;
+    if (curl) {
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_easy_setopt(curl, CURLOPT_URL, /*url.data()*/"http://172.17.173.97:8080/api/user/login");
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "http");
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);// 数据写入文件        
+       
+        struct curl_slist* headers = NULL;
+        headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        const char* data = "student_id=032092119&password=cytcyt918";
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
 
-	QByteArray post = (QString("student_id = %1 & password = %2").arg(ui.accountLineEdit->text()).arg(ui.passwordLineEdit->text())).toUtf8();
+        res = curl_easy_perform(curl);
+        fclose(fp);
+        if (res != 0)
+            return ;       
+        
+    }
+    curl_easy_cleanup(curl);
 
-	//QMessageBox::information(nullptr, "Tips", post);
+    char* str = CCMainWindow::getFile("onlineReturn.txt");
+    QByteArray Json = QByteArray(str);
+	
+	QJsonParseError err;
+	QJsonDocument document = QJsonDocument::fromJson(Json, &err);
+	if (!(err.error == QJsonParseError::NoError))
+	{
+		QMessageBox::warning(nullptr, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("Json文件解析失败!"));
+		return;
+	}
+	
+	QJsonObject obj = document.object();
+	QJsonValue jsonValue = obj.value(QLatin1Literal("data"));
+	QJsonObject child = jsonValue.toObject();
+	gToken = child["token"].toString();
+    jsonValue = child.value(QLatin1Literal("detail"));
+    child = jsonValue.toObject();
+    gId = child["student_id"].toString();
 
-	QNetworkRequest request;
-	request.setUrl(QUrl("http://172.17.173.97:8080/api/user/login"));
-
-	QNetworkReply* reply = accessManager->post(request, "student_id=032092119&password=cytcyt918"/*post*/);
+	close();
+	CCMainWindow* mainwindow = new CCMainWindow;
+	mainwindow->show();
 
 }

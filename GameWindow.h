@@ -28,11 +28,12 @@ private:
 	void wait(int msec);
 	void judgeWinner();
 	void onRobotOper();
-	void onRobotTackCard();
+	void onRobotTackCard();//µçÄÔ
+	void onPlayerOutCard(QVector<Card*>* player, int id, QString opt = ""); // ³öÅÆ
+	void onPlayerFlop(QVector<Card*>* player, QString opt = "");// ·­ÅÆ
 
 private slots:
-	void onCardClicked(int m_id, POSITION position);
-	void onPlayerOper(bool Oper);
+	void onCardClicked(int id, POSITION position);
 
 protected:
 	virtual void paintEvent(QPaintEvent* event);

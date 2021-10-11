@@ -55,7 +55,6 @@ void GameWindow::initControl()
 		i++;
 	}	
 
-	connect(this, SIGNAL(playerOper(bool)), this, SLOT(onPlayerOper(bool)));
 }
 
 void GameWindow::addAllCardToPlayer(QVector<Card*>* player)
@@ -91,13 +90,13 @@ void GameWindow::judgeWinner()
 {
 	if (m_player1Card.size() > m_player2Card.size())
 	{
-		QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("玩家一胜利!"));
+		QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("玩家二胜利!"));
 	}
 	else if (m_player1Card.size() < m_player2Card.size() && !m_isRobot)
 	{
-		QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("玩家二胜利!"));
+		QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("玩家一胜利!"));
 	}
-	else if (m_player1Card.size() < m_player2Card.size() && m_isRobot)
+	else if (m_player1Card.size() > m_player2Card.size() && m_isRobot)
 	{
 		QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("电脑胜利!"));
 	}
@@ -354,14 +353,70 @@ void GameWindow::onRobotTackCard()
 	update();
 	wait(1000);
 
+	m_deckCard.pop_back();
 	if (m_cemeteryCard.size() > 0 && card->getId() % 4 == m_cemeteryCard.top()->getId() % 4)
 	{
-		// 将弃牌堆全部放到手中		
-		m_deckCard.pop_back();
+		// 将弃牌堆全部放到手中			
 		m_player2Card.push_back(card);
 		card->setPosition(PLAYER2);
 		card->setParent(ui.Player2Widget);
 		addAllCardToPlayer(&m_player2Card);
+	}
+	else
+	{
+		m_cemeteryCard.push_back(card);
+		card->setPosition(CEMETERY);
+		card->setParent(ui.cemeteryWidget);
+	}
+}
+
+void GameWindow::onPlayerOutCard(QVector<Card*>* player, int id, QString opt)
+{
+	for (int i = 0; i < player->size(); i++)
+	{
+		if ((*player)[i]->getId() == id)
+		{
+			Card* card = (*player)[i];
+
+			if (m_cemeteryCard.size() > 0 && card->getId() % 4 == m_cemeteryCard.top()->getId() % 4)
+			{
+				addAllCardToPlayer(player);
+			}
+			else
+			{
+				player->remove(i);
+				m_cemeteryCard.push_back(card);
+				card->setPosition(CEMETERY);
+				card->setParent(ui.cemeteryWidget);
+			}
+
+			m_onPlayer1 = true;
+			if(*player == m_player1Card)
+				m_onPlayer1 = false;
+			break;
+		}
+	}
+}
+
+void GameWindow::onPlayerFlop(QVector<Card*>* player, QString opt)
+{
+	m_deckCard.top()->setCardType(POSITIVE);
+	update();
+	wait(1000);
+
+	Card* card = m_deckCard.top();
+
+	if (m_cemeteryCard.size() > 0 && m_deckCard.top()->getId() % 4 == m_cemeteryCard.top()->getId() % 4)
+	{
+		// 将弃牌堆全部放到手中		
+		m_deckCard.pop_back();
+		player->push_back(card);
+		card->setPosition(PLAYER1);
+		if (*player == m_player1Card)
+			card->setParent(ui.Player1Widget);
+		else
+			card->setParent(ui.Player2Widget);
+		addAllCardToPlayer(player);
 	}
 	else
 	{
@@ -370,20 +425,13 @@ void GameWindow::onRobotTackCard()
 		card->setPosition(CEMETERY);
 		card->setParent(ui.cemeteryWidget);
 	}
+
+	m_onPlayer1 = true;
+	if (*player == m_player1Card)
+		m_onPlayer1 = false;
 }
 
-void GameWindow::onPlayerOper(bool Oper)
-{
-	if (Oper && !m_isRobot)
-	{
-		QMessageBox::information(this, "提示", "轮到玩家二出牌!");
-	}
-	else if (!Oper)
-	{
-		QMessageBox::information(this, "提示", "轮到玩家一出牌!");
-	}
-}
-
+// 重绘事件
 void GameWindow::paintEvent(QPaintEvent* event)
 {
 	for (int i = m_deckCard.size() - 1; i >= 0; i--)
@@ -445,7 +493,7 @@ void GameWindow::loadStyleSheet(const QString& sheetName)
 	file.close();
 }
 
-void GameWindow::onCardClicked(int m_id, POSITION position)
+void GameWindow::onCardClicked(int id, POSITION position)
 {
 
 	if (m_isMousePressed)
@@ -453,120 +501,35 @@ void GameWindow::onCardClicked(int m_id, POSITION position)
 	m_isMousePressed = true;
 	if (m_onPlayer1 && position == PLAYER1)
 	{
-		for (int i = 0; i < m_player1Card.size(); i++)
-		{
-			if (m_player1Card[i]->getId() == m_id)
-			{
-				Card* card = m_player1Card[i];				
-
-				if (m_cemeteryCard.size() > 0 && card->getId() % 4 == m_cemeteryCard.top()->getId() % 4)
-				{
-					addAllCardToPlayer(&m_player1Card);
-				}
-				else
-				{
-					m_player1Card.remove(i);
-					m_cemeteryCard.push_back(card);
-					card->setPosition(CEMETERY);
-					card->setParent(ui.cemeteryWidget);
-				}
-
-				m_onPlayer1 = false;
-				break;
-			}
-		}
+		onPlayerOutCard(&m_player1Card, id);
 	}
 	else if (m_onPlayer1 && position == DECK)
 	{	
-		m_deckCard.top()->setCardType(POSITIVE);
-		update();
-		wait(1000);
-
-		Card* card = m_deckCard.top();		
-
-		if (m_cemeteryCard.size() > 0 && m_deckCard.top()->getId() % 4 == m_cemeteryCard.top()->getId() % 4)
-		{
-			// 将弃牌堆全部放到手中		
-			m_deckCard.pop_back();
-			m_player1Card.push_back(card);
-			card->setPosition(PLAYER1);
-			card->setParent(ui.Player1Widget);
-			addAllCardToPlayer(&m_player1Card);
-		}
-		else
-		{
-			m_deckCard.pop_back();
-			m_cemeteryCard.push_back(card);
-			card->setPosition(CEMETERY);
-			card->setParent(ui.cemeteryWidget);
-		}
-		
-		m_onPlayer1 = false;
+		onPlayerFlop(&m_player1Card);
 	}
 	// 两人在同一台电脑上面操作
 	else if (!m_isRobot && !m_onPlayer1 && !m_isOnline)
 	{
 		if (position == PLAYER2)
 		{
-			for (int i = 0; i < m_player2Card.size(); i++)
-			{
-				if (m_player2Card[i]->getId() == m_id)
-				{
-					Card* card = m_player2Card[i];
-
-					if (m_cemeteryCard.size() > 0 && card->getId() % 4 == m_cemeteryCard.top()->getId() % 4)
-					{
-						addAllCardToPlayer(&m_player2Card);
-					}
-					else
-					{
-						m_player2Card.remove(i);
-						m_cemeteryCard.push_back(card);
-						card->setPosition(CEMETERY);
-						card->setParent(ui.cemeteryWidget);
-					}
-
-					m_onPlayer1 = true;
-					break;
-				}
-			}
+			onPlayerOutCard(&m_player2Card, id);
 		}
 		else if (position == DECK)
 		{
-			m_deckCard.top()->setCardType(POSITIVE);
-			update();
-			wait(1000);
-
-			Card* card = m_deckCard.top();
-			
-			if (m_cemeteryCard.size() > 0 && m_deckCard.top()->getId() % 4 == m_cemeteryCard.top()->getId() % 4)
-			{
-				// 将弃牌堆全部放到手中			
-				m_deckCard.pop_back();
-				m_player2Card.push_back(card);
-				card->setPosition(PLAYER2);
-				card->setParent(ui.Player2Widget);
-				addAllCardToPlayer(&m_player2Card);
-			}
-			else
-			{
-				m_deckCard.pop_back();
-				m_cemeteryCard.push_back(card);
-				card->setPosition(CEMETERY);
-				card->setParent(ui.cemeteryWidget);
-			}
-
-			m_onPlayer1 = true;
-			if (m_deckCard.size() == 0)
-				judgeWinner();
+			onPlayerFlop(&m_player2Card);			
 		}
 	}
+
+	if (m_deckCard.size() == 0)
+		judgeWinner();
 
 	wait(500);
 
 	if (m_isRobot && !m_onPlayer1)
 	{
 		onRobotOper();
+		if (m_deckCard.size() == 0)
+			judgeWinner();
 	}
 
 	update();

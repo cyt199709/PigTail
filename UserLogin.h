@@ -11,11 +11,10 @@ class UserLogin : public BasicWindow
 
 public:
 	UserLogin(QWidget *parent = Q_NULLPTR);
-	~UserLogin();
+	~UserLogin();	
 
 private slots:
 	void onLoginBtnClicked();
-	void finishedSlot(QNetworkReply* reply);
 
 private:
 	void initControl();
