@@ -30,11 +30,15 @@ GameWindow::GameWindow(QWidget* parent, bool isRobot, bool isOnline)
 	setAttribute(Qt::WA_DeleteOnClose);
 	initTitleBar();
 	initControl();
-	m_thread1 = new WorkThread(this);
+	m_thread1 = nullptr;
 
 	connect(this, SIGNAL(playerOper(bool, int)), this, SLOT(onPlayer2Oper(bool, int)));
 
+	if (m_isRobot)
+		m_onPlayer1 = true;
+
 	if (isOnline) {
+		m_thread1 = new WorkThread(this);
 		m_isGameAtFirst = true;
 		m_thread1->start();
 	}
@@ -46,7 +50,6 @@ GameWindow::GameWindow(QWidget* parent, bool isRobot, bool isOnline)
 
 GameWindow::~GameWindow()
 {
-
 }
 
 void GameWindow::initControl()
@@ -536,8 +539,10 @@ void GameWindow::onPlayer2Oper(bool oper, int id)
 
 void GameWindow::getMsgInServer()
 {
-	if (m_deckCard.size() == 0)
+	if (m_deckCard.size() == 0) {
 		judgeWinner();
+		return;
+	}
 
 	if (m_onPlayer1 || m_isOnPlayer2)
 		return;
@@ -762,7 +767,8 @@ void GameWindow::onCardClicked(int id, POSITION position)
 
 		}		
 		onPlayerOutCard(&m_player1Card, id);	
-		m_isMousePressed = false;
+		if(!m_isRobot)
+			m_isMousePressed = false;
 	}
 	else if (m_onPlayer1 && position == DECK)
 	{
@@ -829,7 +835,8 @@ void GameWindow::onCardClicked(int id, POSITION position)
 		{
 			onPlayerFlop(&m_player1Card);
 		}		
-		m_isMousePressed = false;
+		if (!m_isRobot)
+			m_isMousePressed = false;
 	}
 	// 两人在同一台电脑上面操作
 	else if (!m_isRobot && !m_onPlayer1 && !m_isOnline)
@@ -846,7 +853,10 @@ void GameWindow::onCardClicked(int id, POSITION position)
 
 
 	if (m_deckCard.size() == 0)
+	{
 		judgeWinner();
+		return;
+	}
 
 	wait(500);
 
@@ -854,7 +864,10 @@ void GameWindow::onCardClicked(int id, POSITION position)
 	{
 		onRobotOper();
 		if (m_deckCard.size() == 0)
+		{
 			judgeWinner();
+			return;
+		}
 	}
 
 	update();

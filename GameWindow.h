@@ -62,6 +62,5 @@ private:
 	bool m_isMousePressed;
 	bool m_isGameAtFirst;
 	bool m_isOnPlayer2;
-	QTimer *m_timer;
 	WorkThread* m_thread1;
 };
