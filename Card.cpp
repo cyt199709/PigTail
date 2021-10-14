@@ -40,6 +40,11 @@ void Card::setCardType(CARDTYPE cardType)
 	this->setScaledContents(true);
 }
 
+void Card::setId(int id)
+{
+	m_id = id;
+}
+
 void Card::initControl(CARDTYPE type, QString pixPath)
 {
 	if (type == BACK || m_position == PLAYER2)

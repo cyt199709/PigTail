@@ -2,6 +2,8 @@
 
 #include <QNetworkReply>
 #include <QDialog>
+#include <QTableView>
+#include <QStandardItemModel>
 #include "BasicWindow.h"
 #include "ui_CCMainWindow.h"
 
@@ -23,6 +25,7 @@ public slots:
 	void joinOnlineGame(bool);
 	void getGmaeList(bool);
 	void setPrivate(int state);
+	void updateGameList(int page_num, QStandardItemModel* model = nullptr);
 
 private:
 	Ui::CCMainWindow ui;
@@ -31,4 +34,6 @@ private:
 	bool m_isPrivate;
 	QDialog* m_dialog;
 	QByteArray m_uid;
+	int m_total;
+	int m_totalPage;
 };

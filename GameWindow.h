@@ -2,6 +2,7 @@
 
 #include "BasicWindow.h"
 #include "ui_GameWindow.h"
+#include "WorkThread.h"
 #include "Card.h"
 #include <QStack>
 #include <QVector>
@@ -21,6 +22,7 @@ class GameWindow : public BasicWindow
 public:
 	GameWindow(QWidget *parent = Q_NULLPTR, bool isRobot = true, bool isOnline = false);
 	~GameWindow();
+	void getMsgInServer();
 
 private:
 	void initControl();
@@ -31,16 +33,20 @@ private:
 	void onRobotTackCard();//电脑
 	void onPlayerOutCard(QVector<Card*>* player, int id, QString opt = ""); // 出牌
 	void onPlayerFlop(QVector<Card*>* player, QString opt = "");// 翻牌
+	int analysisCode(QString code);
+	void onlineFlop(QVector<Card*>* player, int id);
 
 private slots:
 	void onCardClicked(int id, POSITION position);
+	void onPlayer2Oper(bool oper, int id);
+	
 
 protected:
 	virtual void paintEvent(QPaintEvent* event);
 	virtual void loadStyleSheet(const QString& sheetName);
 
 signals:
-	void playerOper(bool); // 玩家1操作完发送true信号，玩家2操作完发送false信号
+	void playerOper(bool, int); // 抽牌true，出牌false
 
 private:
 	Ui::GameWindow ui;
@@ -54,4 +60,8 @@ private:
 	bool m_isRobot;
 	bool m_isOnline;
 	bool m_isMousePressed;
+	bool m_isGameAtFirst;
+	bool m_isOnPlayer2;
+	QTimer *m_timer;
+	WorkThread* m_thread1;
 };

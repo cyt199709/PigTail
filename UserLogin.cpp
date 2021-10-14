@@ -59,7 +59,12 @@ void UserLogin::onLoginBtnClicked()
         struct curl_slist* headers = NULL;
         headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        const char* data = "student_id=032092119&password=cytcyt918";
+        QByteArray pwd = ui.passwordLineEdit->text().toUtf8();
+        QByteArray act = ui.accountLineEdit->text().toUtf8();
+        //const char* data = "student_id=032092119&password=cytcyt918";
+        //032092121  wzp123
+        QByteArray tmp = ("student_id=" + act + "&password=" + pwd).data();
+        const char* data = tmp.data();
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
 
         res = curl_easy_perform(curl);

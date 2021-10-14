@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     UserLogin* userLogin = new UserLogin;
     userLogin->show();
 
-   /* CCMainWindow* MainWindow = new CCMainWindow;
+    /*CCMainWindow* MainWindow = new CCMainWindow;
     MainWindow->show();*/
 
     return a.exec();

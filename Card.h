@@ -25,6 +25,7 @@ public:
 	int getId() const;
 	void setPosition(POSITION position);
 	void setCardType(CARDTYPE cardType);
+	void setId(int id);
 
 private:
 	void initControl(CARDTYPE type = POSITIVE, QString pixPath = "");
