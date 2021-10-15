@@ -3,13 +3,15 @@
 #include "BasicWindow.h"
 #include "ui_UserLogin.h"
 
+class QNetworkReply;
+
 class UserLogin : public BasicWindow
 {
 	Q_OBJECT
 
 public:
 	UserLogin(QWidget *parent = Q_NULLPTR);
-	~UserLogin();
+	~UserLogin();	
 
 private slots:
 	void onLoginBtnClicked();

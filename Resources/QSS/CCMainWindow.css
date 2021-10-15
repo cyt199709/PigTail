@@ -1,0 +1,12 @@
+* {
+    font-family: Microsoft YaHei;
+}
+
+QPushButton{
+	font-size:14px;
+	background:rgb(7, 189, 253);
+}
+
+QPushButton:hover, QPushButton:pressed{
+	background:rgb(33, 200, 253);
+}

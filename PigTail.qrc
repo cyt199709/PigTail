@@ -60,5 +60,8 @@
         <file>Resources/Title/max.png</file>
         <file>Resources/Title/min.png</file>
         <file>Resources/Title/restore.png</file>
+        <file>Resources/QSS/CCMainWindow.css</file>
+        <file>Resources/0.png</file>
+        <file>Resources/QSS/GameWindow.css</file>
     </qresource>
 </RCC>

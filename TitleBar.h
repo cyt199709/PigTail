@@ -27,6 +27,7 @@ public:
 	// 保存、获取窗口最大化前窗口的位置和大小
 	void saveRestoreInfo(const QPoint& point, const QSize& size);
 	void getRestoreInfo(QPoint& point, QSize& size);
+	void setGameStatu(bool gamestatu);
 
 private:
 	void paintEvent(QPaintEvent* event);			// 绘图事件
@@ -37,7 +38,7 @@ private:
 
 	void initControl();								// 初始化控件
 	void initConnections();							// 初始化信号与槽的连接
-	void loadStyleSheet(const QString& sheetName);	// 加载样式表
+	void loadStyleSheet(const QString& sheetName);	// 加载样式表	
 
 signals:
 	// 标题栏按钮点击时触发的信号	
@@ -52,6 +53,7 @@ private slots:
 	void onButtonRestoreClicked();
 	void onButtonMaxClicked();
 	void onButtonCloseClicked();
+	
 
 private:
 	QLabel* m_pTitleContent;		// 标题栏内容标签
@@ -70,6 +72,8 @@ private:
 
 	QString m_titleContent;	// 标题栏的内容
 	ButtonType m_buttonType;// 标题栏按钮类型
+	bool m_isOnGame = false;
+	friend class GameWindow;
 
 };
 

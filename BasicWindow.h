@@ -34,7 +34,6 @@ public slots:
 	void onShowHide(bool);
 	void onShowNormal(bool);
 	void onShowQuit(bool);
-	void onSignalSkinChanged(const QColor& color);
 
 	void onButtonMinClicked();
 	void onButtonRestoreClicked();
@@ -44,8 +43,8 @@ public slots:
 protected:
 	QPoint m_mousePoint; // 鼠标位置
 	bool m_mousePressed; // 鼠标是否按下
-	QColor m_colorBackGround; // 背景色
 	QString m_styleName; // 样式文件名称
 	TitleBar* _titleBar;
+	bool m_isOnGameWindow;
 
 };

@@ -11,7 +11,7 @@
 BasicWindow::BasicWindow(QWidget* parent)
 	: QDialog(parent)
 {
-	m_colorBackGround = CommonUtils::getDefaultSkinColor();
+	m_isOnGameWindow = false;
 	setWindowFlags(Qt::FramelessWindowHint);
 	setAttribute(Qt::WA_TranslucentBackground, true);
 }
@@ -32,10 +32,6 @@ void BasicWindow::loadStyleSheet(const QString& sheetName)
 		QString qsstyleSheet = QLatin1String(file.readAll());
 
 		// 获取当前用户的皮肤RGB值
-		QString r = QString::number(m_colorBackGround.red());
-		QString g = QString::number(m_colorBackGround.green());
-		QString b = QString::number(m_colorBackGround.blue());
-
 		qsstyleSheet += QString("QWidget[titleSkin=true]\
 								{background-color:rgb(0,153,204);\
 								border-top-left-radius:4px;}\
@@ -43,8 +39,15 @@ void BasicWindow::loadStyleSheet(const QString& sheetName)
 								{border-top:1px solid rgba(0,153,204,100);\
 								background-color:rgba(0,153,204,50);\
 								border-bottom-left-radius:4px;\
-								border-bottom-right-radius:4px;}")
-			.arg(r).arg(g).arg(b);
+								border-bottom-right-radius:4px;}\
+								QWidget[leftSkin=true]\
+								{background-color:rgb(0,153,204);\
+								border-top-left-radius:4px;}\
+								QWidget[rightSkin=true]\
+								{border-top:1px solid rgba(0,153,204,100);\
+								background-color:rgba(0,153,204,50);\
+								border-bottom-left-radius:4px;\
+								border-bottom-right-radius:4px;}");
 		setStyleSheet(qsstyleSheet);
 	}
 
@@ -66,12 +69,6 @@ void BasicWindow::paintEvent(QPaintEvent* event)
 {
 	initBackGroundColor();
 	QDialog::paintEvent(event);
-}
-
-void BasicWindow::onSignalSkinChanged(const QColor& color)
-{
-	m_colorBackGround = color;
-	loadStyleSheet(m_styleName);
 }
 
 void BasicWindow::initTitleBar(ButtonType buttontype)
@@ -120,6 +117,8 @@ void BasicWindow::onShowQuit(bool)
 
 void BasicWindow::mouseMoveEvent(QMouseEvent* event)
 {
+	if (m_isOnGameWindow)
+		return;
 	if (m_mousePressed && (event->buttons() && Qt::LeftButton))
 	{
 		move(event->globalPos() - m_mousePoint);

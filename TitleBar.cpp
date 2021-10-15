@@ -194,6 +194,8 @@ void TitleBar::mousePressEvent(QMouseEvent* event)
 // Êó±êÒÆ¶¯
 void TitleBar::mouseMoveEvent(QMouseEvent* event)
 {
+	if (m_isOnGame)
+		return QWidget::mouseMoveEvent(event);
 	if (m_isPressed)
 	{
 		QPoint movePoint = event->globalPos() - m_startMovePos;
@@ -224,6 +226,11 @@ void TitleBar::loadStyleSheet(const QString& sheetName)
 		setStyleSheet(styleSheet);
 	}
 	file.close();
+}
+
+void TitleBar::setGameStatu(bool gamestatu)
+{
+	m_isOnGame = gamestatu;
 }
 
 void TitleBar::onButtonMinClicked()

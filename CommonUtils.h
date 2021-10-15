@@ -19,6 +19,5 @@ public:
 
 public:
 	static void loadStyleSheet(QWidget* widget, const QString& sheetName);
-	static void setDefaultSkinColor(const QColor& color);
-	static QColor getDefaultSkinColor();
+
 };
