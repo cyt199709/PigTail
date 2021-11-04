@@ -110,7 +110,6 @@
     <ClCompile Include="GameWindow.cpp" />
     <ClCompile Include="TitleBar.cpp" />
     <ClCompile Include="UserLogin.cpp" />
-    <ClCompile Include="WorkThread.cpp" />
     <QtRcc Include="PigTail.qrc" />
     <QtUic Include="CCMainWindow.ui" />
     <QtUic Include="GameWindow.ui" />
@@ -123,7 +122,6 @@
     <QtUic Include="UserLogin.ui" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="WorkThread.h" />
     <QtMoc Include="GameWindow.h" />
     <QtMoc Include="UserLogin.h" />
     <QtMoc Include="TitleBar.h" />

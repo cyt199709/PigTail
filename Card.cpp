@@ -63,3 +63,12 @@ void Card::mouseReleaseEvent(QMouseEvent* event)
 	event->accept();
 	emit clicked(m_id, m_position);
 }
+
+void Card::keyPressEvent(QKeyEvent* event)
+{
+	if (event->key() == Qt::Key_Tab)
+	{
+		return;
+	}
+	QLabel::keyPressEvent(event);
+}

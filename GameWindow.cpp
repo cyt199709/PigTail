@@ -12,12 +12,10 @@
 #include <QJsonValue>
 #include <QTimer>
 #include <curl/curl.h>
-#include <QMutex>
 
 extern QString gUuid;
 extern QString gToken;
 extern QString gId;
-static QMutex mutex;
 
 GameWindow::GameWindow(QWidget* parent, bool isRobot, bool isOnline)
 	: BasicWindow(parent)
@@ -25,12 +23,11 @@ GameWindow::GameWindow(QWidget* parent, bool isRobot, bool isOnline)
 	, m_isOnline(isOnline)
 	, m_onPlayer1(false)
 	, m_isOnPlayer2(false)
-{	
+{
 	ui.setupUi(this);
 	setAttribute(Qt::WA_DeleteOnClose);
 	initTitleBar();
 	initControl();
-	m_thread1 = nullptr;
 
 	connect(this, SIGNAL(playerOper(bool, int)), this, SLOT(onPlayer2Oper(bool, int)));
 
@@ -38,9 +35,11 @@ GameWindow::GameWindow(QWidget* parent, bool isRobot, bool isOnline)
 		m_onPlayer1 = true;
 
 	if (isOnline) {
-		m_thread1 = new WorkThread(this);
+		m_timer = new QTimer(this);
+		m_timer->setInterval(300);
+		m_timer->start();
+		connect(m_timer, &QTimer::timeout, this, &GameWindow::getMsgInServer);
 		m_isGameAtFirst = true;
-		m_thread1->start();
 	}
 
 	m_isMousePressed = false;
@@ -62,7 +61,7 @@ void GameWindow::initControl()
 	for (int i = 0; i < 52; ) // 将52张牌压入栈中
 	{
 		int tmp = (qrand() % 52) + 1;
-		Card *card = new Card(ui.deckWidget, POSITION::DECK, tmp, BACK);
+		Card* card = new Card(ui.deckWidget, POSITION::DECK, tmp, BACK);
 		m_deckCard.push_back(card);
 		bool isExist = false;
 		for (int j = 0; j < i; j++)
@@ -79,19 +78,19 @@ void GameWindow::initControl()
 			continue;
 		connect(m_deckCard[i], &Card::clicked, this, &GameWindow::onCardClicked);
 		i++;
-	}	
-		
+	}
+
 }
 
 void GameWindow::addAllCardToPlayer(QVector<Card*>* player)
 {
 	int count = m_cemeteryCard.size();
-	for(int i = 0; i < count; i++)
+	for (int i = 0; i < count; i++)
 	{
 		Card* card = m_cemeteryCard.top();
 		m_cemeteryCard.pop_back();
 		player->push_back(card);
-		if (*player == m_player1Card)
+		if (player == &m_player1Card)
 		{
 			card->setPosition(PLAYER1);
 			card->setParent(ui.Player1Widget);
@@ -105,6 +104,7 @@ void GameWindow::addAllCardToPlayer(QVector<Card*>* player)
 		}
 	}
 	update();
+	wait(500);
 }
 
 void GameWindow::wait(int msec)
@@ -116,9 +116,6 @@ void GameWindow::wait(int msec)
 
 void GameWindow::judgeWinner()
 {
-	if (m_thread1)
-		m_thread1->exit();
-
 	if (m_player1Card.size() > m_player2Card.size())
 	{
 		QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("玩家二胜利!"));
@@ -135,6 +132,8 @@ void GameWindow::judgeWinner()
 	{
 		QMessageBox::information(this, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("平局!"));
 	}
+
+	wait(1000);
 	close();
 }
 
@@ -146,7 +145,7 @@ void GameWindow::onRobotOper()
 	count.insert(SPADE, 0);
 	count.insert(HEART, 0);
 	count.insert(CLUB, 0);
-	
+
 	int cardCount = m_player2Card.size();
 	if (cardCount > 0)
 	{
@@ -172,7 +171,7 @@ void GameWindow::onRobotOper()
 		}
 
 		// 排序
-		qSort(Vec.begin(), Vec.end(), [](Decor ele1, Decor ele2) {return ele1.second > ele2.second; });		
+		qSort(Vec.begin(), Vec.end(), [](Decor ele1, Decor ele2) {return ele1.second > ele2.second; });
 
 
 
@@ -181,7 +180,7 @@ void GameWindow::onRobotOper()
 			QVector<Decor>::iterator it = Vec.begin();
 			// 打出最多的且花色与cemetery顶部花色不同的卡
 			if (it->first != SPADE)
-			{				
+			{
 				for (int i = 0; i < cardCount; i++)
 				{
 					if (m_player2Card[i]->getId() % 4 == it->first)
@@ -195,7 +194,7 @@ void GameWindow::onRobotOper()
 					}
 				}
 			}
-			else 
+			else
 			{
 				it++;
 				if (it->second != 0)
@@ -210,7 +209,7 @@ void GameWindow::onRobotOper()
 							card->setPosition(CEMETERY);
 							card->setParent(ui.cemeteryWidget);
 							break;
-						}						
+						}
 					}
 				}
 				else // 只能抽牌
@@ -350,7 +349,7 @@ void GameWindow::onRobotOper()
 					onRobotTackCard();
 				}
 			}
-		}		
+		}
 		else // cemetery中无牌时，出最多的那一种花色
 		{
 			auto it = Vec.begin();
@@ -372,9 +371,10 @@ void GameWindow::onRobotOper()
 	{
 		onRobotTackCard();
 	}
-	
+
 	m_onPlayer1 = true;
 	update();
+	wait(500);
 }
 
 void GameWindow::onRobotTackCard()
@@ -382,7 +382,7 @@ void GameWindow::onRobotTackCard()
 	Card* card = m_deckCard.top();
 	m_deckCard.top()->setCardType(POSITIVE);
 	update();
-	wait(1000);
+	wait(500);
 
 	m_deckCard.pop_back();
 	if (m_cemeteryCard.size() > 0 && card->getId() % 4 == m_cemeteryCard.top()->getId() % 4)
@@ -419,23 +419,153 @@ void GameWindow::onPlayerOutCard(QVector<Card*>* player, int id, QString opt)
 				m_cemeteryCard.push_back(card);
 				card->setPosition(CEMETERY);
 				card->setParent(ui.cemeteryWidget);
+				if (player == &m_player2Card)
+					card->setCardType(POSITIVE);
 			}
-
-			mutex.lock();
-			m_onPlayer1 = true;
-			if(*player == m_player1Card)
-				m_onPlayer1 = false;
-			mutex.unlock();
 			break;
 		}
 	}
+
+	update();
+	wait(500);
+
+	while (m_isOnline && player == &m_player1Card)
+	{
+		QString tmp;
+		if (id % 4 == DIAMOND)
+			tmp = "D";
+		else if (id % 4 == SPADE)
+			tmp = "S";
+		else if (id % 4 == HEART)
+			tmp = "H";
+		else if (id % 4 == CLUB)
+			tmp = "C";
+
+		if ((id / 4 == 10 && id % 4 > 0) || (id / 4 == 11 && id % 4 == 0))
+			tmp += "J";
+		else if ((id / 4 == 11 && id % 4 > 0) || (id / 4 == 12 && id % 4 == 0))
+			tmp += "Q";
+		else if ((id / 4 == 12 && id % 4 > 0) || (id / 4 == 13 && id % 4 == 0))
+			tmp += "K";
+		else
+			tmp += QString::number((id % 4 == 0) ? (id / 4) : (id / 4 + 1));
+
+		FILE* fp;
+		if ((fp = fopen("onlineReturn.txt", "w+")) == NULL)
+			return;
+
+		CURL* curl;
+		CURLcode res;
+		curl = curl_easy_init();
+		if (curl) {
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
+			QByteArray put = "http://172.17.173.97:9000/api/game/" + gUuid.toUtf8() + "?type=1&card=" + tmp.toUtf8();
+			curl_easy_setopt(curl, CURLOPT_URL, put.data());
+			curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+			curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "http");
+			curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+			struct curl_slist* headers = NULL;
+			headers = curl_slist_append(headers, (QString("Authorization: Bearer ") + gToken).toUtf8().data());
+			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+			res = curl_easy_perform(curl);
+
+			fclose(fp);
+			if (res != 0)
+			{
+				return;
+			}
+		}
+		curl_easy_cleanup(curl);
+
+		char* str = CCMainWindow::getFile("onlineReturn.txt");
+		QByteArray Json = QByteArray(str);
+
+		QJsonParseError err;
+		QJsonDocument document = QJsonDocument::fromJson(Json, &err);
+		if (!(err.error == QJsonParseError::NoError))
+		{
+			QMessageBox::warning(nullptr, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("Json文件解析失败!"));
+			return;
+		}
+
+		QJsonObject obj = document.object();
+
+		int code;
+		code = obj["code"].toInt();
+		if (code == 200)
+		{
+			//QMessageBox::information(nullptr, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("没有对手!"));
+			break;
+		}
+
+
+	}
+
+	while (player == &m_player1Card)
+	{
+		CURL* curl;
+		CURLcode res;
+		FILE* fp;
+		if ((fp = fopen("onlineReturn.txt", "w")) == NULL)
+			return;
+		curl = curl_easy_init();
+		if (curl) {
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
+			QByteArray get = "http://172.17.173.97:9000/api/game/" + gUuid.toUtf8() + "/last";
+			curl_easy_setopt(curl, CURLOPT_URL, get.data());
+			curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+			curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "http");
+			curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);// 数据写入文件        
+			struct curl_slist* headers = NULL;
+			headers = curl_slist_append(headers, (QByteArray("Authorization: Bearer ") + gToken.toUtf8()).data());
+			curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+			res = curl_easy_perform(curl);
+
+			fclose(fp);
+			if (res != 0)
+			{
+				return;
+			}
+		}
+		curl_easy_cleanup(curl);
+
+		char* str = CCMainWindow::getFile("onlineReturn.txt");
+
+
+		QByteArray Json = QByteArray(str);
+
+		QJsonParseError err;
+		QJsonDocument document = QJsonDocument::fromJson(Json, &err);
+		if (!(err.error == QJsonParseError::NoError))
+		{
+			QMessageBox::warning(nullptr, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("Json文件解析失败!"));
+			return;
+		}
+
+		QJsonObject obj = document.object();
+		int code = obj["code"].toInt();
+		QJsonValue value = obj.value(QLatin1String("data"));
+		obj = value.toObject();
+
+		bool turn = true;
+		turn = obj["your_turn"].toBool();
+		if (!turn)
+			break;
+	}
+
+	if (player == &m_player1Card)
+		m_onPlayer1 = false;
+	else
+		m_onPlayer1 = true;
+
+
 }
 
 void GameWindow::onPlayerFlop(QVector<Card*>* player, QString opt)
 {
 	m_deckCard.top()->setCardType(POSITIVE);
 	update();
-	wait(1000);
+	wait(500);
 
 	Card* card = m_deckCard.top();
 
@@ -445,7 +575,7 @@ void GameWindow::onPlayerFlop(QVector<Card*>* player, QString opt)
 		m_deckCard.pop_back();
 		player->push_back(card);
 		card->setPosition(PLAYER1);
-		if (*player == m_player1Card)
+		if (player == &m_player1Card)
 			card->setParent(ui.Player1Widget);
 		else
 			card->setParent(ui.Player2Widget);
@@ -458,12 +588,10 @@ void GameWindow::onPlayerFlop(QVector<Card*>* player, QString opt)
 		card->setPosition(CEMETERY);
 		card->setParent(ui.cemeteryWidget);
 	}
-	ui.userLabel->setText(QString::fromLocal8Bit("用户:") + gId + QString::fromLocal8Bit("的手牌") + "\n轮到你了");
-	mutex.lock();
+	ui.userLabel->setText(QString::fromLocal8Bit("用户:") + gId + QString::fromLocal8Bit("的手牌") + "轮到你了");
 	m_onPlayer1 = true;
-	if (*player == m_player1Card)
+	if (player == &m_player1Card)
 		m_onPlayer1 = false;
-	mutex.unlock();
 }
 
 int GameWindow::analysisCode(QString code)
@@ -477,14 +605,18 @@ int GameWindow::analysisCode(QString code)
 	else if (card.mid(1) == QString("K"))
 		id = 12 * 4;
 	else
-		id = (card.mid(1).toInt() - 1) * 4;
+	{
+		id = card.mid(1).toInt() - 1;
+		id = id * 4;
+	}
+
 
 
 	if (card[0] == "D")
 		id += 4;
 	else if (card[0] == "S")
 		id += 1;
-	else if (card[1] == "H")
+	else if (card[0] == "H")
 		id += 2;
 	else
 		id += 3;
@@ -497,13 +629,18 @@ void GameWindow::onlineFlop(QVector<Card*>* player, int id)
 	m_deckCard.top()->setId(id);
 	m_deckCard.top()->setCardType(POSITIVE);
 	update();
-	wait(800);
+	wait(500);
+
+	if (player == &m_player1Card)
+		int i = 1;
+	if (player == &m_player2Card)
+		int i = 2;
 
 	Card* card = m_deckCard.top();
 	m_deckCard.pop_back();
 	if (m_cemeteryCard.size() > 0 && m_cemeteryCard.top()->getId() % 4 == card->getId() % 4)
 	{
-		if (*player == m_player1Card) {
+		if (player == &m_player1Card) {
 			card->setParent(ui.Player1Widget);
 			card->setPosition(PLAYER1);
 		}
@@ -522,23 +659,25 @@ void GameWindow::onlineFlop(QVector<Card*>* player, int id)
 	}
 
 	update();
+	wait(500);
 }
 
 void GameWindow::onPlayer2Oper(bool oper, int id)
 {
-	if(oper)
+	if (oper)
 		onlineFlop(&m_player2Card, id);
 	else
 		onPlayerOutCard(&m_player2Card, id);
 
-	mutex.lock();
 	m_onPlayer1 = true;
 	m_isOnPlayer2 = false;
-	mutex.unlock();
+	update();
+	wait(500);
 }
 
 void GameWindow::getMsgInServer()
 {
+
 	if (m_deckCard.size() == 0) {
 		judgeWinner();
 		return;
@@ -547,7 +686,6 @@ void GameWindow::getMsgInServer()
 	if (m_onPlayer1 || m_isOnPlayer2)
 		return;
 
-	mutex.lock();
 	CURL* curl;
 	CURLcode res;
 	FILE* fp;
@@ -574,12 +712,14 @@ void GameWindow::getMsgInServer()
 
 	char* str = CCMainWindow::getFile("onlineReturn.txt");
 
-	mutex.unlock();
-
 	QByteArray Json = QByteArray(str);
 
 	QJsonParseError err;
 	QJsonDocument document = QJsonDocument::fromJson(Json, &err);
+	if (document.isNull())
+	{
+		return;
+	}
 	if (!(err.error == QJsonParseError::NoError))
 	{
 		QMessageBox::warning(nullptr, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("Json文件解析失败!"));
@@ -589,34 +729,34 @@ void GameWindow::getMsgInServer()
 	QJsonObject obj = document.object();
 	int code = obj["code"].toInt();
 	QJsonValue jsonValue = obj.value(QLatin1Literal("data"));
-	obj = jsonValue.toObject();	
+	obj = jsonValue.toObject();
 	if (code != 200)
 		return;
 
 	bool turn = false;
-	turn = obj["your_turn"].toBool();
+	bool isNull = obj["your_turn"].isNull();
+	if (!isNull)
+	{
+		turn = obj["your_turn"].toBool();
+	}
 	if (turn && m_isGameAtFirst)
 	{
 		m_isGameAtFirst = false;
-		mutex.lock();
 		m_isOnPlayer2 = false;
 		m_onPlayer1 = true;
 		ui.userLabel->setText(QString::fromLocal8Bit("用户:") + gId + QString::fromLocal8Bit("的手牌") + "\n轮到你了");
-		mutex.unlock();
-	}	
+	}
 
 	if (turn)
 	{
 		if (obj["last_msg"].toString() == QString::fromLocal8Bit("对局刚开始"))
 			return;
-		
-		mutex.lock();
+
 		m_isOnPlayer2 = true;
-		mutex.unlock();
 		int id;
 		QString last_code = obj["last_code"].toString();
 		id = analysisCode(last_code);
-		
+
 		if (last_code[2] == "0") // 翻牌
 		{
 			emit playerOper(true, id);
@@ -626,7 +766,7 @@ void GameWindow::getMsgInServer()
 		{
 			emit playerOper(false, id);
 			//onPlayerOutCard(&m_player2Card, id);
-		}		
+		}
 	}
 }
 
@@ -647,9 +787,9 @@ void GameWindow::paintEvent(QPaintEvent* event)
 
 	for (int i = 0; i < m_player1Card.size(); i++)
 	{
-		if(i * 45 < 1530)
+		if (i * 45 < 1530)
 			m_player1Card[i]->setGeometry(i * 45, 0, m_player1Card[i]->width(), m_player1Card[i]->height());
-		else if(i * 45 >= 1530)
+		else if (i * 45 >= 1530)
 			m_player1Card[i]->setGeometry((i - 34) * 45, 75, m_player1Card[i]->width(), m_player1Card[i]->height());
 		m_player1Card[i]->show();
 	}
@@ -692,38 +832,32 @@ void GameWindow::loadStyleSheet(const QString& sheetName)
 	file.close();
 }
 
+void GameWindow::mouseReleaseEvent(QMouseEvent* event)
+{
+	if (m_isMousePressed)
+		QMessageBox::information(this, "提示", "还没轮到你哦!");
+	return BasicWindow::mouseReleaseEvent(event);
+}
+
 void GameWindow::onCardClicked(int id, POSITION position)
 {
 
 	if (m_isMousePressed)
 		return;
-	m_isMousePressed = true;	
+	m_isMousePressed = true;
 
 	if (m_onPlayer1 && position == PLAYER1)
 	{
+		onPlayerOutCard(&m_player1Card, id);
+		if (!m_isRobot)
+			m_isMousePressed = false;
+	}
+	else if (m_onPlayer1 && position == DECK)
+	{
 		if (m_isOnline)
 		{
-			QString tmp;
-			if (id % 4 == DIAMOND)
-				tmp = "D";
-			else if (id % 4 == SPADE)
-				tmp = "S";
-			else if (id % 4 == HEART)
-				tmp = "H";
-			else if (id % 4 == CLUB)
-				tmp = "C";
-
-			if ((id / 4 == 10 && id % 4 > 0) || (id / 4 == 11 && id % 4 == 0))
-				tmp += "J";
-			else if ((id / 4 == 11 && id % 4 > 0) || (id / 4 == 12 && id % 4 == 0))
-				tmp += "Q";
-			else if ((id / 4 == 12 && id % 4 > 0) || (id / 4 == 13 && id % 4 == 0))
-				tmp += "K";
-			else
-				tmp += QString::number((id % 4 == 0) ? (id / 4) : (id / 4 + 1));
-
 			FILE* fp;
-			if ((fp = fopen("onlineReturn.txt", "w+")) == NULL)
+			if ((fp = fopen("onlineReturn.txt", "w")) == NULL)
 				return;
 
 			CURL* curl;
@@ -731,7 +865,8 @@ void GameWindow::onCardClicked(int id, POSITION position)
 			curl = curl_easy_init();
 			if (curl) {
 				curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
-				curl_easy_setopt(curl, CURLOPT_URL, (QString("http://172.17.173.97:9000/api/game/") + gUuid +  QString("?type=1&card=") + tmp).toUtf8().data());
+				QByteArray put = ("http://172.17.173.97:9000/api/game/" + gUuid.toUtf8() + "?type=0");
+				curl_easy_setopt(curl, CURLOPT_URL, put.data());
 				curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 				curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "http");
 				curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
@@ -758,63 +893,8 @@ void GameWindow::onCardClicked(int id, POSITION position)
 			}
 
 			QJsonObject obj = document.object();
-
-			if (obj["msg"].toString() == QString::fromLocal8Bit("对象不存在"))
-			{
-				QMessageBox::information(nullptr, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("没有对手!"));
-				return;
-			}		
-
-		}		
-		onPlayerOutCard(&m_player1Card, id);	
-		if(!m_isRobot)
-			m_isMousePressed = false;
-	}
-	else if (m_onPlayer1 && position == DECK)
-	{
-		if (m_isOnline)
-		{
-			mutex.lock();
-			FILE* fp;
-			if ((fp = fopen("onlineReturn.txt", "w")) == NULL)
-				return;
-
-			CURL* curl;
-			CURLcode res;
-			curl = curl_easy_init();
-			if (curl) {
-				curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
-				QByteArray put = ("http://172.17.173.97:9000/api/game/" + gUuid.toUtf8() + "?type=0");
-				curl_easy_setopt(curl, CURLOPT_URL, put.data());
-				curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-				curl_easy_setopt(curl, CURLOPT_DEFAULT_PROTOCOL, "http");
-				curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-				struct curl_slist* headers = NULL;
-				headers = curl_slist_append(headers, (QString("Authorization: Bearer ") + gToken).toUtf8().data());
-				curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-				res = curl_easy_perform(curl);
-
-				fclose(fp);
-				if (res != 0)
-					return;
-			}
-			curl_easy_cleanup(curl);			
-
-			char* str = CCMainWindow::getFile("onlineReturn.txt");
-			mutex.unlock();
-			QByteArray Json = QByteArray(str);
-
-			QJsonParseError err;
-			QJsonDocument document = QJsonDocument::fromJson(Json, &err);
-			if (!(err.error == QJsonParseError::NoError))
-			{
-				QMessageBox::warning(nullptr, QString::fromLocal8Bit("警告"), QString::fromLocal8Bit("Json文件解析失败!"));
-				return;
-			}
-
-			QJsonObject obj = document.object();
 			QString msg = obj["msg"].toString();
-			
+
 			if (obj["msg"].toString() == QString::fromLocal8Bit("对象不存在"))
 			{
 				QMessageBox::information(nullptr, QString::fromLocal8Bit("提示"), QString::fromLocal8Bit("没有对手!"));
@@ -826,15 +906,13 @@ void GameWindow::onCardClicked(int id, POSITION position)
 			QString code = obj["last_code"].toString();
 			// 解析代码
 			int id = analysisCode(code);
-			onlineFlop(&m_player1Card ,id);
-			mutex.lock();
+			onlineFlop(&m_player1Card, id);
 			m_onPlayer1 = false;
-			mutex.unlock();
 		}
 		else
 		{
 			onPlayerFlop(&m_player1Card);
-		}		
+		}
 		if (!m_isRobot)
 			m_isMousePressed = false;
 	}
@@ -858,7 +936,7 @@ void GameWindow::onCardClicked(int id, POSITION position)
 		return;
 	}
 
-	wait(500);
+	wait(300);
 
 	if (m_isRobot && !m_onPlayer1)
 	{
@@ -871,5 +949,6 @@ void GameWindow::onCardClicked(int id, POSITION position)
 	}
 
 	update();
+	wait(500);
 	m_isMousePressed = false;
 }

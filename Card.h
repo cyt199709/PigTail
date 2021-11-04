@@ -32,6 +32,7 @@ private:
 
 protected:
 	virtual void mouseReleaseEvent(QMouseEvent* event);
+	virtual void keyPressEvent(QKeyEvent* event);
 
 signals:
 	void clicked(int, POSITION);
